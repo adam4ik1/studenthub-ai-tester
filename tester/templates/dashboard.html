@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Website Tester</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='tester.css') }}">
+</head>
+<body>
+<header class="topbar"><div><p class="eyebrow">QUALITY ASSURANCE LAB</p><h1>AI Website Tester</h1><p>Automated browser checks · Evidence · Suggested fixes</p></div><div class="mark">QA</div></header>
+<main class="wrap">
+<section class="panel">
+  <h2>Run a test suite</h2>
+  <p>Start StudentHub in another terminal first. The tester will interact with it using a real Chromium browser.</p>
+  <form method="post">
+    <label for="target_url">Website URL</label>
+    <input id="target_url" name="target_url" value="{{ target_url }}" required>
+    <button class="button" type="submit">Run tests</button>
+  </form>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+</section>
+{% if report %}
+<section class="summary">
+  <div class="metric"><span>Total tests</span><strong>{{ report.summary.total }}</strong></div>
+  <div class="metric"><span>Passed</span><strong class="green">{{ report.summary.passed }}</strong></div>
+  <div class="metric"><span>Failed</span><strong class="red">{{ report.summary.failed }}</strong></div>
+</section>
+<section class="panel">
+  <div class="report-head"><div><p class="eyebrow">TEST RUN {{ report.run_id }}</p><h2>Results</h2><p class="muted">Target: {{ report.target_url }} · {{ report.created_at }}</p></div><a class="download" href="{{ url_for('reports', filename=report.report_file) }}">Download JSON report</a></div>
+  {% for item in report.results %}
+  <article class="result">
+    <div class="result-top"><h3>{{ item.name }}</h3><span class="pill {{ 'pass' if item.status == 'PASS' else 'fail' }}">{{ item.status }}</span></div>
+    <p>{{ item.details }}</p>
+    <div class="explanation"><strong>AI / diagnostic explanation</strong><p>{{ item.explanation }}</p></div>
+    {% if item.screenshot %}
+      <a href="{{ url_for('screenshots', filename=item.screenshot) }}" target="_blank" rel="noopener">Open evidence screenshot</a>
+      <img class="evidence" src="{{ url_for('screenshots', filename=item.screenshot) }}" alt="Screenshot evidence for {{ item.name }}">
+    {% endif %}
+  </article>
+  {% endfor %}
+  {% if report.javascript_page_errors %}
+  <h3>JavaScript page errors</h3><ul>{% for err in report.javascript_page_errors %}<li>{{ err }}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endif %}
+<section class="note"><strong>What this tool does:</strong> Playwright performs real browser actions and assertions. AI explains the recorded results when an API key is configured. Without a key, local diagnostic explanations are used.</section>
+</main>
+<footer>StudentHub QA demo · Built with Flask and Playwright</footer>
+</body></html>
